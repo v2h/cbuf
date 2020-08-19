@@ -107,9 +107,8 @@ uint64_t cbuf_write(cbuf_t *cb, const void *data, uint64_t numOfBytes) {
 }
 
 //
-uint64_t cbuf_read(cbuf_t *cb, void *buffer, uint64_t numOfBytes)
-{
     const uint8_t *dst = (uint8_t *)buffer;
+uint64_t cbuf_read(cbuf_t *cb, void *buffer, uint64_t numOfBytes) {
     uint64_t bytesToRead = CBUF_MIN(numOfBytes, cbuf_get_filled(cb));
     if (0 == bytesToRead) {
         return 0;
