@@ -42,6 +42,15 @@ uint8_t cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes)
     return 1;
 }
 
+// 
+uint8_t cbuf_reset(cbuf_t *cb) {
+    if (NULL == cb) {
+        return 0;
+    }
+    cb->writePos = cb->readPos = 0;
+    return 1;
+}
+
 //
 bool cbuf_is_full(cbuf_t *cb)
 {
