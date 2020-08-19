@@ -52,13 +52,13 @@ uint8_t cbuf_reset(cbuf_t *cb) {
 }
 
 //
-bool cbuf_is_full(cbuf_t *cb)
+inline bool cbuf_is_full(cbuf_t *cb) 
 {
     return (((cb->writePos + 1) % cb->size) == cb->readPos);
 }
 
 //
-bool cbuf_is_empty(cbuf_t *cb)
+inline bool cbuf_is_empty(cbuf_t *cb) 
 {
     return cb->writePos == cb->readPos;
 }
