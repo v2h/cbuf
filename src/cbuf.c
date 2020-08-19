@@ -52,14 +52,12 @@ uint8_t cbuf_reset(cbuf_t *cb) {
 }
 
 //
-inline bool cbuf_is_full(cbuf_t *cb) 
-{
+inline bool cbuf_is_full(cbuf_t *cb) {
     return (((cb->writePos + 1) % cb->size) == cb->readPos);
 }
 
 //
-inline bool cbuf_is_empty(cbuf_t *cb) 
-{
+inline bool cbuf_is_empty(cbuf_t *cb) {
     return cb->writePos == cb->readPos;
 }
 
@@ -69,8 +67,7 @@ uint64_t cbuf_get_free(cbuf_t *cb) {
 }
 
 //
-uint64_t cbuf_get_filled(cbuf_t *cb)
-{
+uint64_t cbuf_get_filled(cbuf_t *cb) {
     if (cb->writePos >= cb->readPos) {
         return (cb->writePos - cb->readPos);
     }
@@ -81,8 +78,7 @@ uint64_t cbuf_get_filled(cbuf_t *cb)
 
 
 //
-uint64_t cbuf_write(cbuf_t *cb, const void *data, uint64_t numOfBytes)
-{
+uint64_t cbuf_write(cbuf_t *cb, const void *data, uint64_t numOfBytes) {
     const uint8_t *src = (uint8_t *)data;
     uint64_t bytesToWrite = CBUF_MIN(numOfBytes, cbuf_get_free(cb));
     if (0 == bytesToWrite) {
@@ -141,8 +137,7 @@ uint64_t cbuf_read(cbuf_t *cb, void *buffer, uint64_t numOfBytes)
 }
 
 //
-uint8_t cbuf_write_single(cbuf_t *cb, uint8_t data)
-{
+uint8_t cbuf_write_single(cbuf_t *cb, uint8_t data) {
     if (cbuf_is_full(cb))
         return 0;
 
@@ -152,8 +147,7 @@ uint8_t cbuf_write_single(cbuf_t *cb, uint8_t data)
 }
 
 //
-uint8_t cbuf_read_single(cbuf_t *cb, uint8_t *buffer)
-{
+uint8_t cbuf_read_single(cbuf_t *cb, uint8_t *buffer) {
     if (cbuf_is_empty(cb)) {
         return 0;
     }
