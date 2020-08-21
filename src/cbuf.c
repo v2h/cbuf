@@ -1,37 +1,15 @@
 #include "cbuf.h"
 
-
 #include <stdlib.h>
 #include <string.h>
 
 #define CBUF_MIN(x,y) ((x) < (y) ? (x) : (y))
 
-// Initialize using malloc -> extremely careful, not advised to use
-// Returns a pointer to the cbuffer created
-//cbuf_t * cbuf_init_dynamic(cbuf_t *cb, uint16_t const max_number_elements)
-//{
-//    cbuf_t *cbuf = (struct cbuf *)(malloc(sizeof(*cbuf)));
-//    uint8_t *buffer = (uint8_t *)malloc((max_number_elements + 1)* sizeof(uint8_t));
-//    cbuf->bufPtr = buffer; // or = &buffer[0]
-//    cbuf->size = max_number_elements + 1;
-//    cbuf->writePos = 0;
-//    cbuf->readPos = 0;
-//
-//    return cbuf;
-//}
-
-//void cbuf_free(cbuf_t *cb)
-//{
-//    free(cb->bufPtr);
-//    cb->bufPtr = NULL;
-//    cb->writePos = 0;
-//    cb->readPos = 0;
-//    cb->size = 0;
-//}
-
-// Initialize a cbuffer with a given static buffer
-uint8_t cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes)
-{
+// Initialize a cbuffer with a given buffer
+// Maxium storage size is (sizeInBytes - 1) because of the full/empty conditions
+// There is always no data at writePos
+// There is always data at readPos, unless readPos == writePos
+uint8_t cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes) {
     if (NULL == cb || NULL == buffer || 0 == sizeInBytes) {
         return 0;
     }
@@ -62,6 +40,7 @@ inline bool cbuf_is_empty(cbuf_t *cb) {
 }
 
 //
+// Max. free slots is always (size - 1)
 uint64_t cbuf_get_free(cbuf_t *cb) {
     return cb->size - cbuf_get_filled(cb) - 1;
 }
