@@ -124,12 +124,11 @@ uint64_t cbuf_read(cbuf_t *cb, void * const buffer, uint64_t numOfBytes) {
             return bytesToRead + bytesTillEnd;
         }
     }
-    else if (cb->readPos < cb->writePos) {
+    else { // The (readPos == writePos) condition won't happen because it's been checked with cbuf_get_filled()
         memcpy(buffer, &cb->bufPtr[cb->readPos], bytesToRead);
         cb->readPos += bytesToRead;
         return bytesToRead;
     }
-    return 0;
 }
 
 //
