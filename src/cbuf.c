@@ -1,6 +1,4 @@
 #include "cbuf.h"
-
-#include <stdlib.h>
 #include <string.h>
 
 #define CBUF_MIN(x,y) ((x) < (y) ? (x) : (y))
