@@ -10,23 +10,25 @@
 // There is always no data at writePos
 // There is always data at readPos, unless readPos == writePos
 uint8_t cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes) {
+bool cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes) {
     if (NULL == cb || NULL == buffer || 0 == sizeInBytes) {
-        return 0;
+        return false;
     }
     cb->bufPtr   = (uint8_t *)buffer;
     cb->size     = sizeInBytes;
     cb->writePos = 0;
     cb->readPos  = 0;
-    return 1;
+    return true;
 }
 
 // 
 uint8_t cbuf_reset(cbuf_t *cb) {
+bool cbuf_reset(cbuf_t *cb) {
     if (NULL == cb) {
-        return 0;
+        return false;
     }
     cb->writePos = cb->readPos = 0;
-    return 1;
+    return true;
 }
 
 //

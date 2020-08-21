@@ -13,8 +13,8 @@ typedef struct cbuf {
 
 //extern cbuf_t * cb_init_dynamic(cbuf_t *cb, uint16_t const max_number_elements);
 
-uint8_t  cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes);
-uint8_t  cbuf_reset(cbuf_t *cb);
+bool     cbuf_init(cbuf_t *cb, void *buffer, uint64_t const sizeInBytes);
+bool     cbuf_reset(cbuf_t *cb);
 bool     cbuf_is_full(cbuf_t *cb);
 bool     cbuf_is_empty(cbuf_t *cb);
 uint64_t cbuf_get_free(cbuf_t *cb);
