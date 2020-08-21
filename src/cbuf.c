@@ -83,7 +83,7 @@ uint64_t cbuf_write(cbuf_t *cb, void const *data, uint64_t numOfBytes) {
     if (0 == bytesToWrite) {
         return 0;
     }
-    if (cb->writePos > cb->readPos) {
+    if (cb->writePos >= cb->readPos) {
         uint64_t bytesTillEnd = CBUF_MIN(bytesToWrite, cb->size - cb->writePos);
         memcpy(&cb->bufPtr[cb->writePos], data, bytesTillEnd);
         cb->writePos = (cb->writePos + bytesTillEnd) % cb->size;
@@ -102,7 +102,6 @@ uint64_t cbuf_write(cbuf_t *cb, void const *data, uint64_t numOfBytes) {
         cb->writePos += bytesToWrite;
         return bytesToWrite;
     }
-    return 0;
 }
 
 //
