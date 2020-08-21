@@ -78,28 +78,27 @@ uint64_t cbuf_get_filled(cbuf_t *cb) {
 
 
 //
-uint64_t cbuf_write(cbuf_t *cb, const void *data, uint64_t numOfBytes) {
-    const uint8_t *src = (uint8_t *)data;
+uint64_t cbuf_write(cbuf_t *cb, void const *data, uint64_t numOfBytes) {
     uint64_t bytesToWrite = CBUF_MIN(numOfBytes, cbuf_get_free(cb));
     if (0 == bytesToWrite) {
         return 0;
     }
     if (cb->writePos > cb->readPos) {
         uint64_t bytesTillEnd = CBUF_MIN(bytesToWrite, cb->size - cb->writePos);
-        memcpy(&cb->bufPtr[cb->writePos], src, bytesTillEnd);
+        memcpy(&cb->bufPtr[cb->writePos], data, bytesTillEnd);
         cb->writePos = (cb->writePos + bytesTillEnd) % cb->size;
         bytesToWrite -= bytesTillEnd;
         if (0 == bytesToWrite) {
             return bytesTillEnd;
         }
         else { // Back to start of buffer
-            memcpy(&cb->bufPtr[0], &src[bytesTillEnd], bytesToWrite);
+            memcpy(&cb->bufPtr[0], (uint8_t *)data + bytesTillEnd, bytesToWrite);
             cb->writePos += bytesToWrite;
             return bytesToWrite + bytesTillEnd;
         }
     }
-    else if (cb->writePos < cb->readPos) {
-        memcpy(&cb->bufPtr[cb->writePos], src, bytesToWrite);
+    else {
+        memcpy(&cb->bufPtr[cb->writePos], data, bytesToWrite);
         cb->writePos += bytesToWrite;
         return bytesToWrite;
     }
