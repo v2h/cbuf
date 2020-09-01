@@ -420,6 +420,123 @@ void test_cbuf_read(void) {
 }
 
 //
+void test_cbuf_peek(void) {
+#define DATA_SIZE 10
+    cbuf_t cb;
+    uint8_t const mockData[DATA_SIZE] = {32, 50, 81, 60, 48, 58, 29, 13, 48, 57};
+    uint8_t readBuffer[DATA_SIZE];
+    uint8_t originalBuffer[DATA_SIZE];
+    uint8_t buffer[DATA_SIZE];
+    memset(buffer, 0xFF, DATA_SIZE);
+    memset(readBuffer, 0, DATA_SIZE);
+    uint64_t peekCount = 0;
+    uint64_t numBytes, freeBytes, filledBytes = 0;
+
+    TEST_ASSERT_EQUAL(1, cbuf_init(&cb, buffer, DATA_SIZE));
+    
+    // Request to read 0 bytes -> function returns 0
+    TEST_ASSERT_EQUAL(0, cbuf_peek(&cb, readBuffer, 0));
+
+    // // c-buffer empty -> function returns 0
+    TEST_ASSERT_EQUAL(0, cbuf_get_filled(&cb));
+    TEST_ASSERT_EQUAL(0, cbuf_peek(&cb, readBuffer, 5));
+
+    // readPos > writePos, peek before end (not peek all)
+    // [w - o - o - o - r - x - x - x - x - x]
+    cb.readPos = 4; 
+    cb.writePos = 0;
+    filledBytes = cbuf_get_filled(&cb);
+    TEST_ASSERT_EQUAL(6, filledBytes);
+    memcpy(&cb.bufPtr[cb.readPos], mockData, filledBytes); // [w - o - o - o - r/32 - 50 - 81 - 60 - 48 - 58]
+    memcpy(originalBuffer, cb.bufPtr, DATA_SIZE); // Set originalBuffer to compare back later
+    peekCount = cbuf_peek(&cb, readBuffer, filledBytes - 2); // peek 4 bytes: [w - o - o - o - r/32 - 50 - 81 - 60 - p/48 - 58]
+    TEST_ASSERT_EQUAL(filledBytes - 2, peekCount);
+    TEST_ASSERT_EQUAL(4, cb.readPos); // readPos didn't move
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(cb.bufPtr, originalBuffer, DATA_SIZE); // Data in cbuffer didn't change
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(mockData, readBuffer, filledBytes - 2); // 4 bytes copied
+    TEST_ASSERT_EQUAL(filledBytes, cbuf_get_filled(&cb)); // Still 6 bytes left
+
+    // readPos > writePos, read till end (read all)
+    // [w - o - o - o - r - x - x - x - x - x]
+    cbuf_reset(&cb);
+    memset(readBuffer, 0, sizeof(readBuffer));
+    memset(buffer, 0xFF, sizeof(buffer));
+    memset(originalBuffer, 0xFF, sizeof(originalBuffer));
+    cb.readPos = 4; 
+    cb.writePos = 0;
+    filledBytes = cbuf_get_filled(&cb);
+    TEST_ASSERT_EQUAL(6, filledBytes);
+    memcpy(&cb.bufPtr[cb.readPos], mockData, filledBytes); // [w - o - o - o - r/32 - 50 - 81 - 60 - 48 - 58]
+    memcpy(originalBuffer, cb.bufPtr, DATA_SIZE); // Set originalBuffer to compare back later
+    peekCount = cbuf_peek(&cb, readBuffer, filledBytes + 2); // Read all 6 bytes: // [p/w - o - o - o - r/32 - 50 - 81 - 60 - 48 - 58]
+    TEST_ASSERT_EQUAL(filledBytes, peekCount);
+    TEST_ASSERT_EQUAL(4, cb.readPos); // readPos didn't move
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(mockData, readBuffer, peekCount); // 6 bytes copied
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(cb.bufPtr, originalBuffer, DATA_SIZE); // Data in cbuffer didn't change
+    TEST_ASSERT_EQUAL(filledBytes, cbuf_get_filled(&cb)); // Still 6 bytes left
+
+    // readPos > writePos, read till end then wrap around then continue reading (not read all)
+    // [x - x - x - w - o - o - r - x - x - x]
+    cbuf_reset(&cb);
+    memset(readBuffer, 0, sizeof(readBuffer));
+    memset(buffer, 0xFF, sizeof(buffer));
+    memset(originalBuffer, 0xFF, sizeof(originalBuffer));
+    cb.readPos = 6; 
+    cb.writePos = 3;
+    filledBytes = cbuf_get_filled(&cb);
+    TEST_ASSERT_EQUAL(7, filledBytes);
+    memcpy(&cb.bufPtr[cb.readPos], mockData, DATA_SIZE - cb.readPos); // [x - x - x - w - o - o - p/r/32 - 50 - 81 - 60]
+    memcpy(&cb.bufPtr[0], &mockData[DATA_SIZE - cb.readPos], cb.writePos); // [48 - 58 - 29 - w - o - o - p/r/32 - 50 - 81 - 60]
+    memcpy(originalBuffer, cb.bufPtr, DATA_SIZE); // Set originalBuffer to compare back later
+    peekCount = cbuf_peek(&cb, readBuffer, filledBytes - 1); // Read 6 bytes: // [48 - 58 - p/29 - w - o - o - r/32 - 50 - 81 - 60]
+    TEST_ASSERT_EQUAL(filledBytes - 1, peekCount);
+    TEST_ASSERT_EQUAL(6, cb.readPos);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(mockData, readBuffer, peekCount);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(cb.bufPtr, originalBuffer, DATA_SIZE); // Data in cbuffer didn't change
+    TEST_ASSERT_EQUAL(filledBytes, cbuf_get_filled(&cb)); // Still 7 bytes left
+
+    // readPos > writePos, read till end then wrap around then continue reading (read all)
+    // [x - x - x - w - o - o - r - x - x - x]
+    cbuf_reset(&cb);
+    memset(readBuffer, 0, sizeof(readBuffer));
+    memset(buffer, 0xFF, sizeof(buffer));
+    memset(originalBuffer, 0xFF, sizeof(originalBuffer));
+    cb.readPos = 6; 
+    cb.writePos = 3;
+    filledBytes = cbuf_get_filled(&cb);
+    TEST_ASSERT_EQUAL(7, filledBytes);
+    memcpy(&cb.bufPtr[cb.readPos], mockData, DATA_SIZE - cb.readPos); // [x - x - x - w - o - o - r/32 - 50 - 81 - 60]
+    memcpy(&cb.bufPtr[0], &mockData[DATA_SIZE - cb.readPos], cb.writePos); // [48 - 58 - 29 - w - o - o - r/32 - 50 - 81 - 60]
+    memcpy(originalBuffer, cb.bufPtr, DATA_SIZE); // Set originalBuffer to compare back later
+    peekCount = cbuf_peek(&cb, readBuffer, filledBytes); // Read 7 bytes: // [48 - 58 - 29 - p/w - o - o - r/32 - 50 - 81 - 60]
+    TEST_ASSERT_EQUAL(filledBytes, peekCount);
+    TEST_ASSERT_EQUAL(6, cb.readPos);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(mockData, readBuffer, peekCount);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(cb.bufPtr, originalBuffer, DATA_SIZE); // Data in cbuffer didn't change
+    TEST_ASSERT_EQUAL(filledBytes, cbuf_get_filled(&cb)); // Still 7 bytes left in cbuffer
+
+    // readPos < writePos
+    // [o - o - o - r - x - x - w - o - o - o]  
+    cbuf_reset(&cb);
+    memset(readBuffer, 0, sizeof(readBuffer));
+    memset(buffer, 0xFF, sizeof(buffer));
+    memset(originalBuffer, 0xFF, sizeof(originalBuffer));
+    cb.readPos = 3;
+    cb.writePos = 6;
+    filledBytes = cbuf_get_filled(&cb);
+    TEST_ASSERT_EQUAL(3, filledBytes);
+    memcpy(&cb.bufPtr[cb.readPos], mockData, cb.writePos - cb.readPos); // [o - o - o - r/32 - 50 - 81 - w - o - o - o]
+    memcpy(originalBuffer, cb.bufPtr, DATA_SIZE); // Set originalBuffer to compare back later
+    peekCount = cbuf_peek(&cb, readBuffer, filledBytes + 99); // read 3 bytes: // [o - o - o - r/32 - 50 - 81 - p/w - o - o - o]
+    TEST_ASSERT_EQUAL(filledBytes, peekCount);
+    TEST_ASSERT_EQUAL(3, cb.readPos);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(cb.bufPtr, originalBuffer, DATA_SIZE); // Data in cbuffer didn't change
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(mockData, readBuffer, peekCount);
+    TEST_ASSERT_EQUAL(filledBytes, cbuf_get_filled(&cb)); // Still 3 bytes left in cbuffer
+#undef DATA_SIZE
+}
+
+//
 void test_cbuf_write_read(void) {
     /* The cbuf_write() and cbuf_read() functions are tested against the..
     ** cbuf_write_single() and cbuf_read_single() functions
