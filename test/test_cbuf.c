@@ -348,7 +348,7 @@ void test_cbuf_read(void) {
     filledBytes = cbuf_get_filled(&cb);
     TEST_ASSERT_EQUAL(6, filledBytes);
     memcpy(&cb.bufPtr[cb.readPos], mockData, filledBytes); // [w - o - o - o - r/32 - 50 - 81 - 60 - 48 - 58]
-    readCount = cbuf_read(&cb, readBuffer, filledBytes + 2); // Read 4 bytes: [r/w - o - o - o - o - o - o - o - o - o]
+    readCount = cbuf_read(&cb, readBuffer, filledBytes + 2); // Read 6 bytes: [r/w - o - o - o - o - o - o - o - o - o]
     TEST_ASSERT_EQUAL(filledBytes, readCount);
     TEST_ASSERT_EQUAL(0, cb.readPos); // wrapped-around
     TEST_ASSERT_EQUAL(0xFF, cb.bufPtr[cb.readPos]);
