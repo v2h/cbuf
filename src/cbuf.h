@@ -21,6 +21,7 @@ uint64_t cbuf_get_free(cbuf_t *cb);
 uint64_t cbuf_get_filled(cbuf_t *cb);
 uint64_t cbuf_write(cbuf_t *cb, void const *data, uint64_t numOfBytes);
 uint64_t cbuf_read(cbuf_t *cb, void * const buffer, uint64_t numOfBytes);
+uint64_t cbuf_peek(cbuf_t *cb, void * const buffer, uint64_t numOfBytes);
 uint8_t  cbuf_write_single(cbuf_t *cb, uint8_t data);
 uint8_t  cbuf_read_single(cbuf_t *cb, uint8_t *buffer);
 

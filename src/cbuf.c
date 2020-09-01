@@ -156,6 +156,42 @@ uint64_t cbuf_read(cbuf_t *cb, void * const buffer, uint64_t numOfBytes) {
     }
 }
 
+/** \brief Read data from circular buffer without altering the buffer's content
+ * (readPos will not move when reading).
+ * 
+ * \param[in] cb: handle to cbuf_t.
+ * \param[out] data: pointer to buffer for storing data to be read
+ * \param[in] numbOfBytes: number of bytes to be read from circular buffer.
+ * \return number of bytes read from buffer.
+ * 
+ */
+uint64_t cbuf_peek(cbuf_t *cb, void * const buffer, uint64_t numOfBytes) {
+    uint64_t bytesToRead = CBUF_MIN(numOfBytes, cbuf_get_filled(cb));
+    if (0 == bytesToRead) {
+        return 0;
+    }
+    uint64_t readPosTemp = cb->readPos;
+    if (readPosTemp > cb->writePos) {
+        uint64_t bytesTillEnd = CBUF_MIN(bytesToRead, cb->size - readPosTemp);
+        memcpy(buffer, &cb->bufPtr[readPosTemp], bytesTillEnd);
+        readPosTemp = (readPosTemp + bytesTillEnd) % cb->size;
+        bytesToRead -= bytesTillEnd;
+        if (0 == bytesToRead) {
+            return bytesTillEnd;
+        }
+        else { // Back to start of buffer
+            memcpy((uint8_t *)buffer + bytesTillEnd, &cb->bufPtr[0], bytesToRead);
+            readPosTemp += bytesToRead;
+            return bytesToRead + bytesTillEnd;
+        }
+    }
+    else { // The (readPosTemp == writePos) condition won't happen because it's been checked with cbuf_get_filled()
+        memcpy(buffer, &cb->bufPtr[readPosTemp], bytesToRead);
+        readPosTemp += bytesToRead;
+        return bytesToRead;
+    }
+}
+
 /** \brief Write one byte into circular buffer.
  * 
  * \param[in] cb: handle to cbuf_t.
